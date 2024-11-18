@@ -1,26 +1,23 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 const FourLetterInput = ({ onCodeChange }) => {
-    const [inputs, setInputs] = useState(['', '', '', '']); // State to manage the values of the 4 inputs
-    const inputRefs = useRef([]); // Refs for each input field
+    const [inputs, setInputs] = useState(['', '', '', '']);
+    const inputRefs = useRef([]);
 
     // Handle input change (typing)
     const handleChange = (e, index) => {
         const value = e.target.value;
-
-        // Check if the value is a valid letter or number
         const validInput = /^[A-Za-z0-9]$/; // RegEx to allow only letters (A-Z, a-z) and numbers (0-9)
 
         if (value.length === 1 && validInput.test(value)) {
-            // Update the value of the current input
             const newInputs = [...inputs];
             newInputs[index] = value;
             setInputs(newInputs);
-            onCodeChange(newInputs); // Notify parent component about the code change
+            onCodeChange(newInputs);
 
             // Move focus to the next input if there's one
             if (index < 3) {
-                setTimeout(() => inputRefs.current[index + 1]?.focus(), 0); // Focus on next input
+                setTimeout(() => inputRefs.current[index + 1]?.focus(), 0);
             }
         }
     };
@@ -30,22 +27,50 @@ const FourLetterInput = ({ onCodeChange }) => {
         if (e.key === 'Backspace') {
             const newInputs = [...inputs];
             if (newInputs[index] !== '') {
-                // If there is a letter, delete it immediately
-                newInputs[index] = ''; // Clear the current input
+                newInputs[index] = '';
                 setInputs(newInputs);
-                onCodeChange(newInputs); // Notify parent component about the code change
+                onCodeChange(newInputs);
             } else if (index > 0) {
-                // If the current input is empty, move focus to the previous input
-                newInputs[index - 1] = ''; // Clear the previous input
+                newInputs[index - 1] = '';
                 setInputs(newInputs);
-                onCodeChange(newInputs); // Notify parent component about the code change
-                setTimeout(() => inputRefs.current[index - 1]?.focus(), 0); // Focus the previous input
+                onCodeChange(newInputs);
+                setTimeout(() => inputRefs.current[index - 1]?.focus(), 0);
             }
         }
     };
 
+    // Auto-focus the first input when the component is mounted
+    useEffect(() => {
+        inputRefs.current[0]?.focus(); // Focus the first input field
+    }, []);
+
+    // Handle global keypress events to automatically type in the fields
+    useEffect(() => {
+        const handleGlobalKeydown = (e) => {
+            if (/^[A-Za-z0-9]$/.test(e.key)) { // Only allow valid keys (letters and numbers)
+                for (let i = 0; i < 4; i++) {
+                    if (inputs[i] === '') {
+                        const newInputs = [...inputs];
+                        newInputs[i] = e.key;
+                        setInputs(newInputs);
+                        onCodeChange(newInputs);
+                        setTimeout(() => inputRefs.current[i + 1]?.focus(), 0); // Move focus to next input
+                        break;
+                    }
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleGlobalKeydown);
+
+        // Clean up the event listener when component unmounts
+        return () => {
+            window.removeEventListener('keydown', handleGlobalKeydown);
+        };
+    }, [inputs, onCodeChange]);
+
     return (
-        <div className="space-y-4 flex justify-center items-center">
+        <div className="space-x-2 flex justify-center items-center">
             {inputs.map((value, index) => (
                 <input
                     key={index}
@@ -54,8 +79,8 @@ const FourLetterInput = ({ onCodeChange }) => {
                     maxLength={1}
                     onChange={(e) => handleChange(e, index)}
                     onKeyDown={(e) => handleBackspace(e, index)}
-                    ref={(el) => inputRefs.current[index] = el} // Focus management with refs
-                    className="w-12 h-12 text-center bg-white text-black rounded border border-gray-300"
+                    ref={(el) => inputRefs.current[index] = el}
+                    className="w-12 h-12 text-center bg-white text-black rounded border border-gray-300 caret-transparent"
                     placeholder="A"
                 />
             ))}
