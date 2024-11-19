@@ -1,43 +1,41 @@
-// src/components/JoinPartyForm.tsx
 import React, { useState } from "react";
 import axios from "axios";
 
-const JoinPartyForm = () => {
-    const [partyCode, setPartyCode] = useState("");
+const JoinPartyForm = ({ participantId }) => {
     const [participantName, setParticipantName] = useState("");
     const [message, setMessage] = useState("");
 
-    const handleJoinParty = async () => {
+    const handleUpdateName = async () => {
         try {
-            await axios.post("http://localhost:3000/api/join-party", {
-                partyCode,
-                participantName,
+            await axios.post("http://localhost:3000/api/update-participant-name", {
+                participantId,
+                newName: participantName,
             });
 
-            setMessage("Joined party successfully!");
+            setMessage("Name updated successfully!");
         } catch (error) {
-            console.error("Error joining party:", error);
-            setMessage("Failed to join party. Please check the party code.");
+            console.error("Error updating name:", error);
+            setMessage("Failed to update name. Please try again.");
         }
     };
 
     return (
-        <div className="join-party-form">
-            <h2>Join an Existing Party</h2>
-            <input
-                type="text"
-                placeholder="Enter Party Code"
-                value={partyCode}
-                onChange={(e) => setPartyCode(e.target.value)}
-            />
+        <div className="join-party-form mt-4">
+            <h2>Enter Your Name</h2>
             <input
                 type="text"
                 placeholder="Enter your name"
                 value={participantName}
                 onChange={(e) => setParticipantName(e.target.value)}
+                className="border p-2 rounded"
             />
-            <button onClick={handleJoinParty}>Join Party</button>
-            {message && <p>{message}</p>}
+            <button
+                onClick={handleUpdateName}
+                className="ml-2 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+                Submit Name
+            </button>
+            {message && <p className="mt-2 text-green-500">{message}</p>}
         </div>
     );
 };
